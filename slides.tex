@@ -1,0 +1,437 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Beamer Presentation
+% LaTeX Template
+% Version 1.0 (10/11/12)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND THEMES
+%----------------------------------------------------------------------------------------
+
+\documentclass{beamer}
+
+\mode<presentation> {
+
+% The Beamer class comes with a number of default slide themes
+% which change the colors and layouts of slides. Below this is a list
+% of all the themes, uncomment each in turn to see what they look like.
+
+%\usetheme{default}
+%\usetheme{AnnArbor}
+%\usetheme{Antibes}
+%\usetheme{Bergen}
+%\usetheme{Berkeley}
+%\usetheme{Berlin}
+%\usetheme{Boadilla}
+%\usetheme{CambridgeUS}
+%\usetheme{Copenhagen}
+%\usetheme{Darmstadt}
+%\usetheme{Dresden}
+%\usetheme{Frankfurt}
+%\usetheme{Goettingen}
+%\usetheme{Hannover}
+%\usetheme{Ilmenau}
+%\usetheme{JuanLesPins}
+%\usetheme{Luebeck}
+\usetheme{Madrid}
+%\usetheme{Malmoe}
+%\usetheme{Marburg}
+%\usetheme{Montpellier}
+%\usetheme{PaloAlto}
+%\usetheme{Pittsburgh}
+%\usetheme{Rochester}
+%\usetheme{Singapore}
+%\usetheme{Szeged}
+%\usetheme{Warsaw}
+
+% As well as themes, the Beamer class has a number of color themes
+% for any slide theme. Uncomment each of these in turn to see how it
+% changes the colors of your current slide theme.
+
+%\usecolortheme{albatross}
+%\usecolortheme{beaver}
+%\usecolortheme{beetle}
+%\usecolortheme{crane}
+%\usecolortheme{dolphin}
+%\usecolortheme{dove}
+%\usecolortheme{fly}
+%\usecolortheme{lily}
+%\usecolortheme{orchid}
+%\usecolortheme{rose}
+%\usecolortheme{seagull}
+%\usecolortheme{seahorse}
+%\usecolortheme{whale}
+%\usecolortheme{wolverine}
+
+%\setbeamertemplate{footline} % To remove the footer line in all slides uncomment this line
+%\setbeamertemplate{footline}[page number] % To replace the footer line in all slides with a simple slide count uncomment this line
+
+%\setbeamertemplate{navigation symbols}{} % To remove the navigation symbols from the bottom of all slides uncomment this line
+}
+
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage{listings}
+%----------------------------------------------------------------------------------------
+%	TITLE PAGE
+%----------------------------------------------------------------------------------------
+
+\title[GPU Computing]{GPU Computing Tutorial} % The short title appears at the bottom of every slide, the full title is only on the title page
+
+\author{M. Schwinzerl, R. De Maria } % Your name
+\institute[CERN] % Your institution as it will appear on the bottom of every slide, may be shorthand to save space
+{
+CERN \\ % Your institution for the title page
+\medskip
+\textit{riccardo.de.maria@cern.ch, martin.schwinzerl@cern.ch} % Your email address
+}
+\date{\today} % Date, can be changed to a custom date
+
+\begin{document}
+
+\begin{frame}
+\titlepage % Print the title page as the first slide
+\end{frame}
+
+%\begin{frame}
+%\frametitle{Overview} % Table of contents slide, comment this block out to remove it
+%\tableofcontents % Throughout your presentation, if you choose to use \section{} and \subsection{} commands, these will automatically be printed on this slide as an overview of your presentation
+%\end{frame}
+
+%----------------------------------------------------------------------------------------
+%	PRESENTATION SLIDES
+%----------------------------------------------------------------------------------------
+
+%------------------------------------------------
+%\section{First Section} % Sections can be created in order to organize your presentation into discrete blocks, all sections and subsections are automatically printed in the table of contents as an overview of the talk
+%------------------------------------------------
+
+%\subsection{Subsection Example} % A subsection can be created just before a set of slides with a common theme to further break down your presentation into chunks
+
+\begin{frame}{Parallelisation}
+\begin{itemize}
+    \item Why? Find sections of task that can be performed simultanously
+    \item Simultanous: asynchronous, synchronous, both
+    \item Flynn's taxanomy $\longrightarrow$ different concepts of parallelism (SIMD, MISD, MIMD)
+    \item Today: different concepts of parallelism available on the same hardware
+\end{itemize}
+    
+\end{frame}
+
+\begin{frame}{Scaling}
+\begin{itemize}
+    \item Amdahl's law: $\eta_S = \frac{T}{t_S+\frac{t_P}{n_P}}$
+    \item Problem size is constant, vary number of "processors" and estimate speedup
+    \item Plot: examples with $t_P = 0.95 \cdot T$ and $t_P = 0.99 \cdot T$ $\longrightarrow$ $\eta_S$ drops below $50\%$ above 20 and 100 processors (respectively)
+    \item Gustav'son-Barsis law: constant number of (max) processesors, vary problem size $\longrightarrow$ different picture
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{GPU vs CPU}
+\footnotesize
+GPU have:
+\begin{itemize}
+\item more arithmetic units (in particular single precision SP)
+\item less logic for control flow
+\item less registers per arithmetic units
+\item less memory but larger bandwidth
+\end{itemize}
+
+GPU hardware types:
+\begin{itemize}
+\item low end gaming:  $<$100\$, still equal or better computing than desktop CPU in SP and DP
+\item high end gaming :   100-800\$, substantial computing in SP, DP= 1/32 SP    
+\item server HPC: 6000-8000\$, substantial computing in SP, DP= 1/2 SP, no video
+\item hybrid HPC: 3000-8000\$, substantial computing in SP, DP= 1/2 SP
+\item server AI: 6000-8000\$, substantial computing in SP, DP= 1/32 SP, no video
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{GPU vs CPU: Example}
+
+\begin{tabular}{|l|c|c|}
+Specification  & CPU & GPU  \\
+Cores or compute units    & 2-64  & 16-80  \\
+Arithmetic units per core & 2-8 & 64  \\
+GFlops SP  & 24-2000 & 1000 - 15000 \\ 
+GFlops DP  & 12-1000 & 100 - 7500 \\
+\end{tabular}
+
+obtaining theretical performance is guaranteed only for very simple expression $a = a + b * c$. Code complexity, number of temporary variables, branches reduce performance (more on GPUs)
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Coding frameworks}
+\begin{itemize}
+\item OpenCL: vendor neutral (AMD, NVIDIA, CPU(pocl)), V1.2 supported everywhere, C99 Kernels (free)
+\item CUDA: NVIDIA only, C++ kernels, unified memory (free)
+\item OpenACC: open standard, compiler directives, commercial implemenation (only PGI on NVIDIA)
+\item SyCL: open standard, beta commercial implementation (Intel, AMD) (no NVIDIA)
+\item ROCM: open source (from AMD) (HIP compatible AMD, Nvidia)
+\item clang+SPIRV+vulkan: vendor neutral (AMD, NVIDIA) not easy
+\item clang+PTX: Nvidia not easy
+\item numba, cupy (pure python)
+\item pyopencl (python + OpenCL kernels), pycuda  (python + Cuda kernels)
+\end{itemize}
+
+%\begin{verbatim}
+%    digraph G {
+%  "C99 Kernel" -> "OpenCL1.2"
+%  "C++ 'cuda' Kernel" -> "Cuda"
+%  "C++ 'sycl' Kernel" -> "SyCL"
+%  "C++ 'hip' Kernel" -> "HIP"
+%  "SyCL" -> "OpenCL1.2"
+%  "OpenCL1.2" -> "AMD Driver"
+%  "OpenCL1.2" -> "NVIDIA Driver"
+%  "NVIDIA Driver" -> "NVIDIA GPU"
+%  "AMD Driver" -> "AMD GPU"
+%  "OpenCL1.2" -> "Pocl" -> "Intel CPU"
+%  "Pocl" -> "AMD CPU"
+%  "Cuda" -> "NVIDIA Driver"
+%  "HIP" -> "Cuda"
+%  "HIP" -> "AMD Driver"
+%  "Python 'Kernel'" -> "numba cuda" -> "NVIDIA Driver"
+%  "Python 'rocm' Kernel" -> "numba rocm" -> "AMD Driver"
+%  "Julia kernel"  -> "NVIDIA Driver"
+%  "C, Fortran OpenACC" -> PGI -> "NVIDIA Driver"
+%}
+\end{verbatim}
+\end{frame}
+
+%------------------------------------------------
+
+\begin{frame}[fragile]
+\frametitle{Kernel Example: c[i]=a[i]+b[i]}
+\footnotesize
+
+OpenCL
+\begin{lstlisting}[language=C++,basicstyle=\ttfamily,keywordstyle=\color{red}]
+__kernel void addKernel(
+    __global const float *a_g,
+    __global const float *b_g,
+    __global float *c_g) {
+  int i = get_global_id(0);
+  c_g[i] = a_g[i] + b_g[i];
+}
+\end{lstlisting}
+
+Cuda
+\begin{lstlisting}[language=c++,basicstyle=\ttfamily,keywordstyle=\color{red}]
+__global__ void addKernel(
+    const float* a_g,
+    const float* b_g,
+    float* c_g,
+    int size) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < size) { c[i] = a[i] + b[i]; }
+}
+\end{lstlisting}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{OpenCL (complete example): Context}
+platform
+device
+context
+program
+queue
+\end{frame}
+
+\begin{frame}
+\frametitle{OpenCL  (complete example): Memory and kernel launch}
+buffer
+copytodevice
+call
+copytohost
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{pyopencl (complete example)}
+\footnotesize
+\begin{lstlisting}[language=python,basicstyle=\ttfamily,keywordstyle=\color{red}]
+import numpy as np; import pyopencl as cl
+a_np = np.random.rand(50000).astype(np.float32)
+b_np = np.random.rand(50000).astype(np.float32)
+ctx = cl.create_some_context()
+queue = cl.CommandQueue(ctx)
+mf = cl.mem_flags; RO= mf.READ_ONLY | mf.COPY_HOST_PTR
+a_g = cl.Buffer(ctx, RO, hostbuf=a_np)
+b_g = cl.Buffer(ctx, RO, hostbuf=b_np)
+prg = cl.Program(ctx, """ <opencl as string """).build()
+res_g = cl.Buffer(ctx, mf.WRITE_ONLY, a_np.nbytes)
+prg.sum(queue, a_np.shape, None, a_g, b_g, res_g)
+res_np = np.empty_like(a_np)
+cl.enqueue_copy(queue, res_np, res_g)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+
+\frametitle{CUDA  HelloWorld}
+\footnotesize
+
+\begin{lstlisting}[language=bash,basicstyle=\ttfamily,keywordstyle=\color{red}]
+cat hello.cu
+\end{lstlisting}
+\begin{lstlisting}[language=c++,basicstyle=\ttfamily,keywordstyle=\color{red}]
+#include <stdio.h>
+__global__ void helloFromGPU (void) { 
+     printf("Hello World from GPU!\n");
+}
+int main(void) {
+    printf("Hello World from CPU!\n");
+    helloFromGPU <<<1, 10>>>();
+    cudaDeviceReset();
+    return 0;
+}
+\end{lstlisting}
+\begin{lstlisting}[language=bash,basicstyle=\ttfamily,keywordstyle=\color{red}]
+nvcc -o hello hello.cu
+hello
+\end{lstlisting}
+\begin{lstlisting}[language=bash,basicstyle=\ttfamily,keywordstyle=\color{red}]
+Hello World from CPU!
+Hello World from GPU!
+Hello World from GPU!
+Hello World from GPU!
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{CUDA  (complete example): Memory allocation}
+\footnotesize
+
+\begin{lstlisting}[language=c++]
+// Allocate CPU buffers for three vectors
+const int arraySize = 5;
+const int a[arraySize] = {  1,  2,  3,  4,  5 };
+const int b[arraySize] = { 10, 20, 30, 40, 50 };
+int c[arraySize] = { 0 };
+
+// Allocate GPU buffers for three vectors
+int* dev_a = nullptr;
+int* dev_b = nullptr;
+int* dev_c = nullptr;
+cudaMalloc((void**)&dev_c, size*sizeof(int));
+cudaMalloc((void**)&dev_a, size*sizeof(int));
+cudaMalloc((void**)&dev_b, size*sizeof(int));
+
+// Copy input vectors from host memory to GPU buffers.
+cudaMemcpy(dev_a, a, size*sizeof(int), cudaMemcpyHostToDevice);
+cudaMemcpy(dev_b, b, size*sizeof(int), cudaMemcpyHostToDevice);
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{CUDA  (complete example): Kernel call and copy}
+\footnotesize
+
+\begin{lstlisting}[language=c++,basicstyle=\ttfamily,keywordstyle=\color{red}]
+// Launch a kernel on the GPU with one thread for each element.
+// 2 is number of computational blocks and
+// (size + 1) / 2 is a number of threads in a block
+addKernel<<<2, (size + 1) / 2>>>(dev_c, dev_a, dev_b, size);
+    
+// cudaDeviceSynchronize waits for the kernel to finish,
+// and returns any errors encountered during the launch.
+cudaDeviceSynchronize();
+
+// Copy output vector from GPU buffer to host memory.
+cudaMemcpy(c, dev_c, size*sizeof(int), cudaMemcpyDeviceToHost);
+
+//Clean-up
+cudaFree(dev_c);
+cudaFree(dev_a);
+cudaFree(dev_b);
+cudaDeviceReset();
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+\frametitle{pycuda  (complete example)}
+same example?
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{numba}
+\footnotesize
+\begin{lstlisting}[language=python,basicstyle=\ttfamily,keywordstyle=\color{red}]
+from __future__ import division
+from numba import cuda
+import numpy as np
+
+@cuda.jit # CUDA kernel
+def my_kernel(a,b,c):
+    i = cuda.grid(1)
+    if i < c.size:
+        c[i] = a[i] + b[i]
+
+# Host code
+a = np.ones(256)
+b = np.arange(256)
+c = np.zeros(256)
+
+threadsperblock = 256
+blockspergrid = len(c) // threadsperblock
+my_kernel[blockspergrid, threadsperblock](a,b,c)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+\frametitle{Expected performance gain}
+SixTrackLib example, plot on scaling
+\end{frame}
+
+\begin{frame}
+\frametitle{GPU at CERN}
+\begin{itemize}
+    \item ABP server (4x NVidia V100)
+    \item TechLab servers (P100, GTX 1080, AMD W8100) booking needed
+    \item HTCondor servers from next year (16x V100)
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Extra slides}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Best GPU for DP workloads}
+
+\footnotesize
+\begin{tabular}{|l|c|c|c|c|c|c|c|}
+\hline
+Name &  Type & Year & DP & RAM & Price \\
+  &    &   & [GFlops] & [GB] & [\$ 2018] \\\hline
+Nvidia Tesla V100 & Server & 2017 & 7450 & 32 & 6000\\
+Nvidia Quadro GV100 & Workstation & 2017 & 7400 & 32 & 9000\\
+AMD Radeon Instinct MI60 & Server& 2019 & 7400 & 32 & ? \\
+AMD Titan V & Workstation & 2018 & 6144 & 12 & 3000\\
+Nvidia Quadro GP100 & Workstation & 2016 & 5168 & 16 & 9000\\
+Nvidia Tesla P100 & Server & 2016 & 4760 & 16 & 6000\\
+AMD FirePro S9170 & Server & 2014 &  2620 & 32& 3500\\
+AMD FirePro W9100 & Workstation & 2014 & 2619 & 16 & 2200\\
+AMD FirePro S9150 & Server & 2014 &  2530 & 16 & 2000\\
+AMD FirePro W8100 & Workstation & 2014 & 2109 & 16 & 900)\\
+\hline
+\end{tabular}
+
+\end{frame}
+
+
+
+\end{document}
